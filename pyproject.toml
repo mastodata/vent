@@ -1,0 +1,24 @@
+[project]
+name = "mastodata-vent"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "jonathan-d-zhang", email = "69145546+jonathan-d-zhang@users.noreply.github.com"},
+]
+dependencies = [
+    "Mastodon-py>=1.8.1",
+    "pyzmq>=25.1.1",
+    "python-dotenv>=1.0.0",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.pdm.scripts]
+start = "python src/vent/__main__.py"
+test = "pytest"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=7.4.0",
+]
