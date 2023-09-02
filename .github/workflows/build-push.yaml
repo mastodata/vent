@@ -1,0 +1,82 @@
+name: Build and Push App Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "master"
+    tags: [v*]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-push:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744  # 3.6.0
+
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4c0219f9ac95b02789c1075625400b2acbff50b1  # v2.9.1
+        with:
+          install: true
+          cleanup: false
+          platforms: ${{ matrix.platform }}
+          config-inline: |
+            [worker.oci]
+            gc = true
+            gckeepstorage = 10_000  # 10 GB
+
+            [[worker.oci.gcpolicy]]
+            all = true
+            keepBytes = 10_000_000_000  # 10 GB
+            keepDuration = 7_776_000  # 90 days
+
+      - name: Login to registry (${{ env.REGISTRY }})
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc  # v2.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: $${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker Metadata
+        id: docker_meta
+        uses: docker/metadata-action@818d4b7b91585d195f67373fd9cb0332e31a7175  # v4.6.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=edge
+            type=semver,pattern={{version}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+            type=sha,format=long
+
+      - name: Build and Push Docker Image
+        id: docker_build_push
+        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825  # v4.1.1
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest='${{ steps.docker_build_push.outputs.digest }}'
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce  # v3.1.2
+        with:
+          if-no-files-found: error
+          name: digests-${{ matrix.app }}
+          path: /tmp/digests/*
+          retention-days: 1
