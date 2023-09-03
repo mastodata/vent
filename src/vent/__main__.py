@@ -22,7 +22,7 @@ class QueueingListener(mastodon.StreamListener):
 
 if __name__ == "__main__":
     ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
+    pub = ctx.socket(zmq.PUSH)
     pub.bind(os.environ["VENT_ADDRESS"])
 
     print("starting")
