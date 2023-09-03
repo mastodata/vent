@@ -23,7 +23,7 @@ class QueueingListener(mastodon.StreamListener):
 if __name__ == "__main__":
     ctx = zmq.Context()
     pub = ctx.socket(zmq.PUSH)
-    pub.bind(os.environ["VENT_ADDRESS"])
+    pub.connect(os.environ["TASK_ADDRESS"])
 
     print("starting")
     m = mastodon.Mastodon(api_base_url="https://fosstodon.org")
