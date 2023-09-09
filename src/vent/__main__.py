@@ -16,8 +16,15 @@ class QueueingListener(mastodon.StreamListener):
     def __init__(self):
         super().__init__()
 
+    def on_status_update(self, status):
+        _process_status(status)
+
     def on_update(self, status):
-        pub.send_string(str(status["id"]))
+        _process_status(status)
+
+
+def _process_status(status):
+    pub.send_json(status, cls=DateTimeEncoder)
 
 
 if __name__ == "__main__":
