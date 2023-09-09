@@ -13,12 +13,6 @@ RUN mkdir __pypackages__ && pdm install --prod --no-lock --no-editable
 COPY src/ src/
 RUN pdm install --prod --no-lock --no-editable
 
-FROM builder as test
-
-RUN pdm install -d
-
-COPY tests/ tests/
-
 # ====================================================================================================
 # Prod
 FROM python:3.11-slim@sha256:4b2e5faf103be72abb65046501a89f8feaef28c1148fc2f9b3326e31694ee735 as prod
