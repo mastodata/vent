@@ -33,6 +33,6 @@ if __name__ == "__main__":
     pub.connect(os.environ["TASK_ADDRESS"])
 
     print("starting")
-    m = mastodon.Mastodon(api_base_url="https://fosstodon.org")
-    print("connected")
+    m = mastodon.Mastodon(api_base_url=os.environ["API_BASE_URL"], access_token=os.environ.get("MASTODON_ACCESS_TOKEN"))
+    print("authenticated")
     h = m.stream_public(QueueingListener())
